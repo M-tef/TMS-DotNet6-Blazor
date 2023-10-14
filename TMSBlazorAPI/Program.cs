@@ -6,7 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-//Adding DB context !
+//Adding DB context !!!
 var connString = builder.Configuration.GetConnectionString("TMSconn");
 builder.Services.AddDbContext<TMSDbContext>(options => options.UseSqlServer(connString));
 
