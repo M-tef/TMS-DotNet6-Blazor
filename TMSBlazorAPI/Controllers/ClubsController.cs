@@ -2,10 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TMSBlazorAPI.Data;
+using TMSBlazorAPI.Models.Club;
 
 namespace TMSBlazorAPI.Controllers
 {
@@ -14,31 +16,32 @@ namespace TMSBlazorAPI.Controllers
     public class ClubsController : ControllerBase
     {
         private readonly TMSDbContext _context;
+        private readonly IMapper mapper;
 
-        public ClubsController(TMSDbContext context)
+        public ClubsController(TMSDbContext context, IMapper mapper)
         {
             _context = context;
+            this.mapper = mapper;
         }
 
         // GET: api/Clubs
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Club>>> GetClubs()
+        public async Task<ActionResult<IEnumerable<ClubReadOnlyDto>>> GetClubs()
         {
+          var clubs = await _context.Clubs.ToListAsync();
+          var clubDtos = mapper.Map<IEnumerable<ClubReadOnlyDto>>(clubs);
+
           if (_context.Clubs == null)
           {
               return NotFound();
           }
-            return Ok(await _context.Clubs.ToListAsync());
+            return Ok(clubDtos);
         }
 
         // GET: api/Clubs/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Club>> GetClub(int id)
+        public async Task<ActionResult<ClubReadOnlyDto>> GetClub(int id)
         {
-          if (_context.Clubs == null)
-          {
-              return NotFound();
-          }
             var club = await _context.Clubs.FindAsync(id);
 
             if (club == null)
@@ -46,18 +49,56 @@ namespace TMSBlazorAPI.Controllers
                 return NotFound();
             }
 
-            return Ok(club);
+            var clubDto = mapper.Map<ClubReadOnlyDto>(club);
+
+            return Ok(clubDto);
         }
 
         // PUT: api/Clubs/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutClub(int id, Club club)
+        //[HttpPut("update by {id}")]
+        //public async Task<IActionResult> PutClub(int id, Club club)
+        //{
+        //    if (id != club.ClubId)
+        //    {
+        //        return BadRequest();
+        //    }
+
+        //    _context.Entry(club).State = EntityState.Modified;
+
+        //    try
+        //    {
+        //        await _context.SaveChangesAsync();
+        //    }
+        //    catch (DbUpdateConcurrencyException)
+        //    {
+        //        if (!await ClubExists(id))
+        //        {
+        //            return NotFound();
+        //        }
+        //        else
+        //        {
+        //            throw;
+        //        }
+        //    }
+
+        //    return NoContent();
+        //}
+
+        // PUT: api/Clubs/5
+        [HttpPut("update by {id}")]
+        public async Task<IActionResult> PutClub(int id, ClubUpdateDto clubDto)
         {
-            if (id != club.ClubId)
+            if (id != clubDto.Id)
             {
                 return BadRequest();
             }
+
+            var club = await _context.Clubs.FindAsync(id);
+            if (club == null)
+            {
+                return BadRequest();
+            }
+            mapper.Map(clubDto, club);
 
             _context.Entry(club).State = EntityState.Modified;
 
@@ -81,10 +122,10 @@ namespace TMSBlazorAPI.Controllers
         }
 
         // POST: api/Clubs
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Club>> PostClub(Club club)
+        public async Task<ActionResult<ClubCreateDto>> PostClub(ClubCreateDto clubDto)
         {
+          var club =  mapper.Map<Club>(clubDto);    
           if (_context.Clubs == null)
           {
               return Problem("Entity set 'TMSDbContext.Clubs'  is null.");

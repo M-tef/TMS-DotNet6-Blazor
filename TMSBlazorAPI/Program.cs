@@ -1,5 +1,7 @@
+using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
+using TMSBlazorAPI.Configuration;
 using TMSBlazorAPI.Data;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,6 +11,9 @@ var builder = WebApplication.CreateBuilder(args);
 //Adding DB context !!!
 var connString = builder.Configuration.GetConnectionString("TMSconn");
 builder.Services.AddDbContext<TMSDbContext>(options => options.UseSqlServer(connString));
+builder.Services.AddAutoMapper(typeof(MapperConfig));
+
+
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
