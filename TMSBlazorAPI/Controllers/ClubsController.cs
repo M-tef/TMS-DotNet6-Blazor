@@ -5,9 +5,11 @@ using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.DotNet.Scaffolding.Shared.Messaging;
 using Microsoft.EntityFrameworkCore;
 using TMSBlazorAPI.Data;
 using TMSBlazorAPI.Models.Club;
+using TMSBlazorAPI.Static;
 
 namespace TMSBlazorAPI.Controllers
 {
@@ -17,41 +19,63 @@ namespace TMSBlazorAPI.Controllers
     {
         private readonly TMSDbContext _context;
         private readonly IMapper mapper;
+        private readonly ILogger<ClubsController> logger;
 
-        public ClubsController(TMSDbContext context, IMapper mapper)
+        public ClubsController(TMSDbContext context, IMapper mapper, ILogger<ClubsController> logger)
         {
             _context = context;
             this.mapper = mapper;
+            this.logger = logger;
         }
 
         // GET: api/Clubs
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ClubReadOnlyDto>>> GetClubs()
         {
-          var clubs = await _context.Clubs.ToListAsync();
-          var clubDtos = mapper.Map<IEnumerable<ClubReadOnlyDto>>(clubs);
+            try
+            {
+                var clubs = await _context.Clubs.ToListAsync();
+                var clubDtos = mapper.Map<IEnumerable<ClubReadOnlyDto>>(clubs);
 
-          if (_context.Clubs == null)
-          {
-              return NotFound();
-          }
-            return Ok(clubDtos);
+                if (_context.Clubs == null)
+                {
+                    return NotFound();
+                }
+                return Ok(clubDtos);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"error on GET in {nameof(GetClubs)}");
+                return StatusCode(500, Messages.Error500Message);
+            }
+          
         }
 
         // GET: api/Clubs/5
         [HttpGet("{id}")]
         public async Task<ActionResult<ClubReadOnlyDto>> GetClub(int id)
         {
-            var club = await _context.Clubs.FindAsync(id);
-
-            if (club == null)
+            try
             {
-                return NotFound();
+                var club = await _context.Clubs.FindAsync(id);
+
+                if (club == null)
+                {
+                    return NotFound();
+                }
+
+                var clubDto = mapper.Map<ClubReadOnlyDto>(club);
+
+                return Ok(clubDto);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"error on GET in {nameof(GetClubs)}");
+                return StatusCode(500, Messages.Error500Message);
             }
 
-            var clubDto = mapper.Map<ClubReadOnlyDto>(club);
 
-            return Ok(clubDto);
+            
         }
 
         // PUT: api/Clubs/5
@@ -125,35 +149,60 @@ namespace TMSBlazorAPI.Controllers
         [HttpPost]
         public async Task<ActionResult<ClubCreateDto>> PostClub(ClubCreateDto clubDto)
         {
-          var club =  mapper.Map<Club>(clubDto);    
-          if (_context.Clubs == null)
-          {
-              return Problem("Entity set 'TMSDbContext.Clubs'  is null.");
-          }
-            await _context.Clubs.AddAsync(club);
-            await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetClubs), new { id = club.ClubId }, club);
+            try
+            {
+                var club = mapper.Map<Club>(clubDto);
+                if (_context.Clubs == null)
+                {
+                    return Problem("Entity set 'TMSDbContext.Clubs'  is null.");
+                }
+                await _context.Clubs.AddAsync(club);
+                await _context.SaveChangesAsync();
+
+                return CreatedAtAction(nameof(GetClubs), new { id = club.ClubId }, club);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"error on POST in {nameof(clubDto)}");
+                return StatusCode(500, Messages.Error500Message);
+            }
+
+
+            
         }
 
         // DELETE: api/Clubs/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteClub(int id)
         {
-            if (_context.Clubs == null)
+            try
             {
-                return NotFound();
+
+                if (_context.Clubs == null)
+                {
+                    return NotFound();
+                }
+                var club = await _context.Clubs.FindAsync(id);
+                if (club == null)
+                {
+                    return NotFound();
+                }
+
+                _context.Clubs.Remove(club);
+                await _context.SaveChangesAsync();
+
+                return NoContent();
             }
-            var club = await _context.Clubs.FindAsync(id);
-            if (club == null)
+            catch (Exception ex)
             {
-                return NotFound();
+                logger.LogError(ex, $"error on DELETE in {nameof(DeleteClub)}");
+                return StatusCode(500, Messages.Error500Message);
             }
 
-            _context.Clubs.Remove(club);
-            await _context.SaveChangesAsync();
 
-            return NoContent();
+
+
         }
 
 
