@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
+using AutoMapper.QueryableExtensions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.DotNet.Scaffolding.Shared.Messaging;
@@ -34,8 +35,11 @@ namespace TMSBlazorAPI.Controllers
         {
             try
             {
-                var clubs = await _context.Clubs.ToListAsync();
-                var clubDtos = mapper.Map<IEnumerable<ClubReadOnlyDto>>(clubs);
+                var clubDtos = await _context.Clubs
+                    .Include(q=>q.User)
+                    .ProjectTo<ClubReadOnlyDto>(mapper.ConfigurationProvider)
+                    .ToListAsync();
+                //var clubDtos = mapper.Map<IEnumerable<ClubReadOnlyDto>>(clubs);
 
                 if (_context.Clubs == null)
                 {
@@ -53,18 +57,24 @@ namespace TMSBlazorAPI.Controllers
 
         // GET: api/Clubs/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<ClubReadOnlyDto>> GetClub(int id)
+        public async Task<ActionResult<ClubDetailDto>> GetClub(int id)
         {
             try
             {
-                var club = await _context.Clubs.FindAsync(id);
+                var clubDtos = await _context.Clubs
+                    .Include(q => q.User)
+                    .ProjectTo<ClubReadOnlyDto>(mapper.ConfigurationProvider)
+                    .FirstOrDefaultAsync(q=>q.UserID== id);
+                   // .ToListAsync();
 
-                if (club == null)
+                //var club = await _context.Clubs.FindAsync(id);
+
+                if (clubDtos == null)
                 {
                     return NotFound();
                 }
 
-                var clubDto = mapper.Map<ClubReadOnlyDto>(club);
+                var clubDto = mapper.Map<ClubReadOnlyDto>(clubDtos);
 
                 return Ok(clubDto);
             }
@@ -109,7 +119,7 @@ namespace TMSBlazorAPI.Controllers
         //}
 
         // PUT: api/Clubs/5
-        [HttpPut("update by {id}")]
+        [HttpPut("update by ClubID")]
         public async Task<IActionResult> PutClub(int id, ClubUpdateDto clubDto)
         {
             if (id != clubDto.Id)
@@ -164,7 +174,7 @@ namespace TMSBlazorAPI.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"error on POST in {nameof(clubDto)}");
+                logger.LogError(ex, $"error on POST in {nameof(PostClub)}");
                 return StatusCode(500, Messages.Error500Message);
             }
 
