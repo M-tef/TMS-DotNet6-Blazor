@@ -26,47 +26,16 @@ public partial class TMSDbContext : DbContext
     {
         modelBuilder.Entity<Club>(entity =>
         {
-            entity.HasKey(e => e.ClubId).HasName("PK__Club__D35058C732832EBF");
+            entity.HasKey(e => e.ClubId).HasName("PK__Club__D35058C7CAD6365B");
 
-            entity.ToTable("Club");
-
-            entity.Property(e => e.ClubId).HasColumnName("ClubID");
-            entity.Property(e => e.ClubName)
-                .HasMaxLength(250)
-                .IsUnicode(false);
-            entity.Property(e => e.CreatedDate)
-                .HasDefaultValueSql("(getdate())")
-                .HasColumnType("datetime");
-            entity.Property(e => e.UserId).HasColumnName("UserID");
-
-            entity.HasOne(d => d.User).WithMany(p => p.Clubs).HasForeignKey(d => d.UserId);
+            entity.Property(e => e.CreatedDate).HasDefaultValueSql("(getdate())");
         });
 
         modelBuilder.Entity<User>(entity =>
         {
-            entity.HasKey(e => e.UserId).HasName("PK__User__1788CCACE278D849");
+            entity.HasKey(e => e.UserId).HasName("PK__User__1788CCAC5D2EB702");
 
-            entity.ToTable("User");
-
-            entity.Property(e => e.UserId).HasColumnName("UserID");
-            entity.Property(e => e.Email)
-                .HasMaxLength(25)
-                .IsUnicode(false);
-            entity.Property(e => e.FirstName)
-                .HasMaxLength(25)
-                .IsUnicode(false);
-            entity.Property(e => e.LastName)
-                .HasMaxLength(25)
-                .IsUnicode(false);
-            entity.Property(e => e.MembershipStartDate)
-                .HasDefaultValueSql("(getdate())")
-                .HasColumnType("datetime");
-            entity.Property(e => e.MembershipStatus)
-                .HasMaxLength(10)
-                .IsUnicode(false);
-            entity.Property(e => e.Phone)
-                .HasMaxLength(15)
-                .IsUnicode(false);
+            entity.Property(e => e.MembershipStartDate).HasDefaultValueSql("(getdate())");
         });
 
         OnModelCreatingPartial(modelBuilder);

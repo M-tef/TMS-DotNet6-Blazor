@@ -5,7 +5,6 @@ using Serilog;
 using TMSBlazorAPI.Configuration;
 using TMSBlazorAPI.Data;
 using Microsoft.AspNetCore.Identity;
-using TMSBlazorAPI.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -40,9 +39,6 @@ builder.Services.AddCors(options =>
         .AllowAnyOrigin());
 });
 
-var _jwtsetting = builder.Configuration.GetSection("JwtSetting");
-builder.Services.Configure<JwtSetting>(_jwtsetting);
-
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -56,7 +52,6 @@ app.UseHttpsRedirection();
 
 app.UseCors("AllowAll");
 
-app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
